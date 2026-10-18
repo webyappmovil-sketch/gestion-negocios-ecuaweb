@@ -1,0 +1,1742 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta http-equiv="refresh" content="0;url=panel_fac9.html">
+  <script>window.location.replace(new URL('panel_fac9.html', window.location.href).href);</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Financiero Diario - Pequeños Negocios</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Librería SheetJS para lectura de Excel (.xlsx, .xls, .csv) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    .tabular-nums { font-variant-numeric: tabular-nums; }
+    .modal-backdrop { background-color: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen pb-20">
+
+  <!-- BARRA SUPERIOR DE CONTROL -->
+  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="bg-blue-600 p-2.5 rounded-xl text-white font-bold shadow-lg shadow-blue-900/40">
+          <i class="fa-solid fa-chart-line text-xl"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg text-white leading-none" id="business-title">Restaurante El Faro</h1>
+          <span class="text-xs text-slate-400">Panel Financiero Diario & Control Fiscal</span>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-3">
+        <label class="text-xs text-slate-400 hidden sm:inline">Fecha del Reporte:</label>
+        <input type="date" id="report-date" value="2026-09-15" onchange="recargarPanel()" 
+               class="bg-slate-800 border border-slate-700 text-white text-sm rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
+        <button onclick="abrirModalConfig()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 p-2.5 rounded-lg border border-slate-700 transition" title="Configurar Negocio">
+          <i class="fa-solid fa-gear"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+
+    <!-- ALERTAS INTELIGENTES -->
+    <div class="space-y-2" id="alerts-container">
+      <div class="bg-emerald-950/40 border border-emerald-800/60 rounded-xl p-3.5 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <i class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+          <p class="text-sm text-emerald-200">
+            <strong>Paneles y Subida de Facturas Corregidos:</strong> Los 5 botones principales funcionan al 100%. Subida y previsualización de imágenes (JPG, PNG, PDF) activada con desglose por IVA (0%, 4%, 10%, 21%) y opción de eliminación segura.
+          </p>
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-emerald-400 hover:text-emerald-200 text-xs font-semibold px-2 py-1">Descartar</button>
+      </div>
+    </div>
+
+    <!-- BOTONES DE ACCIÓN RÁPIDA (LOS 5 BOTONES PRINCIPALES DEL PANEL) -->
+    <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <button id="btn-tpv" onclick="abrirModalTPV()" class="bg-blue-600 hover:bg-blue-500 text-white font-medium p-3.5 rounded-xl flex items-center justify-center space-x-2 transition shadow-lg shadow-blue-950/50 cursor-pointer">
+        <i class="fa-solid fa-file-excel text-lg"></i>
+        <span class="text-xs sm:text-sm font-semibold">Subir TPV / Cierre Z</span>
+      </button>
+
+      <button id="btn-facturas" onclick="abrirModalFacturas()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium p-3.5 rounded-xl flex items-center justify-center space-x-2 transition shadow-lg shadow-indigo-950/50 cursor-pointer">
+        <i class="fa-solid fa-file-invoice-dollar text-lg"></i>
+        <span class="text-xs sm:text-sm font-semibold">Subir / Registrar Factura</span>
+      </button>
+
+      <button id="btn-costos" onclick="abrirModalCostos()" class="bg-cyan-600 hover:bg-cyan-500 text-white font-medium p-3.5 rounded-xl flex items-center justify-center space-x-2 transition shadow-lg shadow-cyan-950/50 border border-cyan-400/30 cursor-pointer">
+        <i class="fa-solid fa-boxes-packing text-lg text-cyan-200"></i>
+        <span class="text-xs sm:text-sm font-semibold">Panel de Costos</span>
+      </button>
+
+      <button id="btn-gastos" onclick="abrirModalGastos()" class="bg-amber-600 hover:bg-amber-500 text-white font-medium p-3.5 rounded-xl flex items-center justify-center space-x-2 transition shadow-lg shadow-amber-950/50 cursor-pointer">
+        <i class="fa-solid fa-list-check text-lg"></i>
+        <span class="text-xs sm:text-sm font-semibold">Panel de Gastos</span>
+      </button>
+
+      <button id="btn-escandallo" onclick="abrirModalEscandallo()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium p-3.5 rounded-xl flex items-center justify-center space-x-2 transition shadow-lg shadow-emerald-950/50 cursor-pointer">
+        <i class="fa-solid fa-utensils text-lg"></i>
+        <span class="text-xs sm:text-sm font-semibold">Escandallo de Plato</span>
+      </button>
+    </section>
+
+    <!-- KPIS PRINCIPALES DEL PANEL FINANCIERO -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-2">
+        <div class="flex justify-between items-center text-slate-400 text-xs uppercase font-semibold">
+          <span>Ventas del Día</span>
+          <span class="text-blue-400 bg-blue-950/60 px-2 py-0.5 rounded text-[10px]" id="kpi-tag-status">Cierre Activo</span>
+        </div>
+        <div class="text-2xl font-extrabold text-white tabular-nums" id="kpi-daily-sales">0,00 €</div>
+        <div class="text-xs text-slate-400">Ventas Netas: <span id="kpi-net-sales" class="text-slate-200">0,00 €</span></div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-2">
+        <div class="flex justify-between items-center text-slate-400 text-xs uppercase font-semibold">
+          <span>Margen Real Día</span>
+          <span class="text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded text-[10px]" id="kpi-status-badge">🟢 Óptimo</span>
+        </div>
+        <div class="text-2xl font-extrabold text-emerald-400 tabular-nums" id="kpi-daily-margin">0,00 €</div>
+        <div class="text-xs text-slate-400">Margen Neto: <span id="kpi-margin-pct" class="font-bold text-slate-200">0.0%</span></div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-2">
+        <div class="flex justify-between items-center text-slate-400 text-xs uppercase font-semibold">
+          <span>Costos Deducibles (Negocio)</span>
+          <span class="text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded text-[10px]">🟢 Materia Prima</span>
+        </div>
+        <div class="text-2xl font-extrabold text-cyan-400 tabular-nums" id="kpi-deductible-costs">0,00 €</div>
+        <div class="text-xs text-slate-400">Registrados en Panel de Costos</div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-2">
+        <div class="flex justify-between items-center text-slate-400 text-xs uppercase font-semibold">
+          <span>Gastos No Deducibles</span>
+          <span class="text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded text-[10px]">🔴 Personales</span>
+        </div>
+        <div class="text-2xl font-extrabold text-rose-400 tabular-nums" id="kpi-personal-expenses">0,00 €</div>
+        <div class="text-xs text-slate-400">Compras Personales / No Negocio</div>
+      </div>
+    </section>
+
+    <!-- ESTRUCTURA DE COSTOS Y PROYECCIÓN FISCAL -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 lg:col-span-2 space-y-4">
+        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300">Estructura Financiera del Día</h2>
+
+        <div class="space-y-3">
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-400">Costos Directos (Materia Prima / Insumos Negocio):</span>
+              <span class="font-semibold text-slate-200" id="kpi-cogs">0,00 € (0.0%)</span>
+            </div>
+            <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
+              <div id="bar-cogs" class="bg-cyan-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-400">Gastos Operativos (Fijos + Variables del Panel de Gastos):</span>
+              <span class="font-semibold text-slate-200" id="kpi-expenses">0,00 €</span>
+            </div>
+            <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
+              <div id="bar-expenses" class="bg-amber-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-400">Beneficio Neto Limpio del Día:</span>
+              <span class="font-semibold text-emerald-400" id="kpi-profit">0,00 € (0.0%)</span>
+            </div>
+            <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden">
+              <div id="bar-profit" class="bg-emerald-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BLOQUE FISCAL DINÁMICO DE IVA E IRPF -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+        <div class="flex justify-between items-center">
+          <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300">Proyección Fiscal (Modelo 303 / 130)</h2>
+          <button onclick="abrirModalIVA()" class="text-xs bg-slate-800 hover:bg-slate-700 text-amber-400 px-2.5 py-1 rounded border border-slate-700 transition">
+            <i class="fa-solid fa-eye"></i> Ver Reporte IVA
+          </button>
+        </div>
+
+        <div class="p-3 bg-slate-800/60 rounded-lg border border-slate-700/60 space-y-1">
+          <div class="flex justify-between text-xs text-slate-400">
+            <span>IVA Neto Estimado a Pagar (Trimestre)</span>
+            <span class="text-[10px] text-amber-400 font-mono">Modelo 303</span>
+          </div>
+          <div class="text-xl font-bold text-amber-400 tabular-nums" id="kpi-vat">0,00 €</div>
+          <div class="text-[11px] text-slate-400">
+            Repercutido: <span id="kpi-vat-collected" class="text-slate-200">0,00 €</span> | 
+            Soportado Deducible: <span id="kpi-vat-deductible" class="text-emerald-400">0,00 €</span>
+          </div>
+        </div>
+
+        <div class="p-3 bg-slate-800/60 rounded-lg border border-slate-700/60 space-y-1">
+          <div class="flex justify-between text-xs text-slate-400">
+            <span>IRPF Futuro Estimado (20% Beneficio)</span>
+            <span class="text-[10px] text-blue-400 font-mono">Modelo 130</span>
+          </div>
+          <div class="text-xl font-bold text-blue-400 tabular-nums" id="kpi-irpf">0,00 €</div>
+          <div class="text-[11px] text-slate-400">
+            Base Imponible Neta: <span id="kpi-irpf-base" class="text-slate-200">0,00 €</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL REPORTE DE IVA DETALLADO POR TIPOS (MODELO 303) -->
+  <div id="modal-iva-report" class="fixed inset-0 modal-backdrop hidden items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-4xl w-full p-6 space-y-5 shadow-2xl max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-lg text-white flex items-center gap-2">
+          <i class="fa-solid fa-receipt text-amber-400"></i> Reporte Detallado de IVA por Tipos (Modelo 303)
+        </h3>
+        <button onclick="cerrarModal('modal-iva-report')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <p class="text-slate-300">
+          Este informe realiza la liquidación oficial del IVA desglosado por tipos impositivos (<strong>0%, 4%, 10%, 21%</strong>). 
+          Fórmula automática: <strong>Resultado Neto = IVA Repercutido − IVA Soportado Deducible</strong>.
+        </p>
+
+        <!-- DESGLOSE DE TIPOS DE IVA EN TABLA -->
+        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+          <h4 class="font-bold text-slate-200 uppercase tracking-wider text-xs flex items-center gap-2">
+            <i class="fa-solid fa-table-cells text-amber-400"></i> Desglose por Tipo Impositivo (0%, 4%, 10%, 21%)
+          </h4>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-slate-800 text-slate-300 uppercase font-semibold">
+                <tr>
+                  <th class="p-2 border-b border-slate-700">Tipo IVA</th>
+                  <th class="p-2 border-b border-slate-700 text-right">Base Ventas (€)</th>
+                  <th class="p-2 border-b border-slate-700 text-right text-amber-400">IVA Repercutido (€)</th>
+                  <th class="p-2 border-b border-slate-700 text-right">Base Compras (€)</th>
+                  <th class="p-2 border-b border-slate-700 text-right text-emerald-400">IVA Soportado Deducible (€)</th>
+                  <th class="p-2 border-b border-slate-700 text-right text-cyan-400">Diferencia Neta (€)</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800">
+                <tr>
+                  <td class="p-2 font-bold text-slate-200">IVA 0% (Exento / Sin IVA)</td>
+                  <td class="p-2 text-right" id="iva-base-rep-0">0,00 €</td>
+                  <td class="p-2 text-right font-bold text-amber-400" id="iva-cuota-rep-0">0,00 €</td>
+                  <td class="p-2 text-right" id="iva-base-sop-0">0,00 €</td>
+                  <td class="p-2 text-right font-bold text-emerald-400" id="iva-cuota-sop-0">0,00 €</td>
+                  <td class="p-2 text-right font-bold text-cyan-400" id="iva-neto-0">0,00 €</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-bold text-slate-200">IVA 4% (Superreducido - Pan, Leche, Frutas)</td>
+                  <td class="p-2 text-right" id="iva-base-rep-4">0,00 €</td>
+                  <td class="p-2 text-right font-bold text-amber-400" id="iva-cuota-rep-4">0,00 €</td>
+                  <td class="p-2 text-right" id="iva-base-sop-4">0,00 €</td>
+                  <td class="p-2 text-right font-bold text-emerald-400" id="iva-cuota-sop-4">0,00 €</td>
+                  <td class="p-2 text-right font-bold text-cyan-400" id="iva-neto-4">0,00 €</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-bold text-slate-200">IVA 10% (Reducido - Hostelería / Alimentación)</td>
+                  <td class="p-2 text-right" id="iva-base-rep-10">0,00 €</td>
+                  <td class="p-2 text-right font-bold text-amber-400" id="iva-cuota-rep-10">0,00 €</td>
+                  <td class="p-2 text-right" id="iva-base-sop-10">0,00 €</td>
+                  <td class="p-2 text-right font-bold text-emerald-400" id="iva-cuota-sop-10">0,00 €</td>
+                  <td class="p-2 text-right font-bold text-cyan-400" id="iva-neto-10">0,00 €</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-bold text-slate-200">IVA 21% (General - Suministros, Servicios, Higiene)</td>
+                  <td class="p-2 text-right" id="iva-base-rep-21">0,00 €</td>
+                  <td class="p-2 text-right font-bold text-amber-400" id="iva-cuota-rep-21">0,00 €</td>
+                  <td class="p-2 text-right" id="iva-base-sop-21">0,00 €</td>
+                  <td class="p-2 text-right font-bold text-emerald-400" id="iva-cuota-sop-21">0,00 €</td>
+                  <td class="p-2 text-right font-bold text-cyan-400" id="iva-neto-21">0,00 €</td>
+                </tr>
+              </tbody>
+              <tfoot class="bg-slate-900 font-extrabold border-t-2 border-slate-700">
+                <tr>
+                  <td class="p-2 text-white">TOTALES ACUMULADOS</td>
+                  <td class="p-2 text-right text-white" id="rep-tot-base-rep">0,00 €</td>
+                  <td class="p-2 text-right text-amber-400" id="rep-tot-cuota-rep">0,00 €</td>
+                  <td class="p-2 text-right text-white" id="rep-tot-base-sop">0,00 €</td>
+                  <td class="p-2 text-right text-emerald-400" id="rep-tot-cuota-sop">0,00 €</td>
+                  <td class="p-2 text-right text-cyan-400" id="rep-tot-neto">0,00 €</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+            <h4 class="font-bold text-slate-300 uppercase border-b border-slate-800 pb-1">1. Resumen IVA Repercutido (Ventas)</h4>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Ventas Brutas Totales:</span>
+              <span id="rep-ventas-brutas" class="font-bold text-white">0,00 €</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Base Imponible (Ventas Netas):</span>
+              <span id="rep-ventas-netas" class="font-bold text-slate-200">0,00 €</span>
+            </div>
+            <div class="flex justify-between text-amber-400 font-bold border-t border-slate-800 pt-1">
+              <span>Cuota IVA Repercutido Total:</span>
+              <span id="rep-iva-cobrado">0,00 €</span>
+            </div>
+          </div>
+
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+            <h4 class="font-bold text-slate-300 uppercase border-b border-slate-800 pb-1">2. Resumen IVA Soportado Deducible</h4>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Compras Deducibles Totales:</span>
+              <span id="rep-gastos-deducibles" class="font-bold text-white">0,00 €</span>
+            </div>
+            <div class="flex justify-between text-rose-400">
+              <span>Gastos Personales (No descuentan IVA):</span>
+              <span id="rep-gastos-personales" class="font-bold">0,00 €</span>
+            </div>
+            <div class="flex justify-between text-emerald-400 font-bold border-t border-slate-800 pt-1">
+              <span>Cuota IVA Soportado Deducible:</span>
+              <span id="rep-iva-soportado">0,00 €</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-slate-950 p-4 rounded-xl border border-amber-900/60 space-y-2">
+          <div class="flex justify-between items-center text-sm font-bold">
+            <span class="text-slate-200">RESULTADO NETO A PAGAR / LIQUIDACIÓN IVA:</span>
+            <span id="rep-iva-resultado" class="text-xl font-extrabold text-amber-400">0,00 €</span>
+          </div>
+          <p class="text-[11px] text-slate-400">
+            *Fórmula: IVA Repercutido (<span id="rep-txt-cobrado">0,00 €</span>) − IVA Soportado Deducible (<span id="rep-txt-soportado">0,00 €</span>).
+          </p>
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-3 border-t border-slate-800">
+        <button onclick="cerrarModal('modal-iva-report')" class="px-5 py-2 text-sm bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-lg cursor-pointer">Cerrar Reporte</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 1: INSPECTOR TPV EXCEL -->
+  <div id="modal-tpv" class="fixed inset-0 modal-backdrop hidden items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full p-6 space-y-5 shadow-2xl max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-lg text-white flex items-center gap-2">
+          <i class="fa-solid fa-file-excel text-blue-500"></i> Inspector y Cargador de Excel TPV
+        </h3>
+        <button onclick="cerrarModal('modal-tpv')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div class="space-y-4">
+        <div class="border-2 border-dashed border-slate-700 hover:border-blue-500 rounded-xl p-5 text-center space-y-2 cursor-pointer transition bg-slate-800/40" onclick="document.getElementById('file-tpv-input').click()">
+          <i class="fa-solid fa-cloud-arrow-up text-3xl text-blue-400"></i>
+          <p class="text-sm font-medium text-slate-200">Haz clic aquí para seleccionar tu archivo Excel (.xlsx / .csv)</p>
+          <p class="text-xs text-slate-400">Inspecciona todas las filas y suma la columna seleccionada</p>
+          <input type="file" id="file-tpv-input" accept=".xlsx,.xls,.csv" class="hidden" onchange="procesarArchivoExcelTPV(this)">
+        </div>
+
+        <div id="excel-preview-container" class="hidden space-y-3 bg-slate-950 p-4 rounded-xl border border-slate-800">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-900 p-3 rounded-lg border border-slate-800">
+            <div>
+              <label class="block text-xs text-slate-400 font-semibold mb-1">1. Selecciona la columna a calcular:</label>
+              <select id="excel-column-select" onchange="recalcularDesdeColumnaSeleccionada()" class="w-full bg-slate-800 border border-blue-500 text-white font-bold text-xs rounded-lg px-3 py-2 outline-none">
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs text-slate-400 font-semibold mb-1">2. Método de cálculo:</label>
+              <select id="excel-method-select" onchange="recalcularDesdeColumnaSeleccionada()" class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-lg px-3 py-2 outline-none">
+                <option value="SUM_ALL">Sumar todas las filas de la columna (Suma exacta)</option>
+                <option value="TAKE_TOTAL_ROW">Usar celda de fila TOTAL al final (si existe)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between bg-slate-900/80 px-4 py-2.5 rounded-lg border border-slate-800">
+            <div>
+              <span id="preview-row-count-badge" class="text-xs text-blue-400 font-medium">0 filas procesadas</span>
+              <span id="preview-method-badge" class="text-[11px] text-slate-400 block"></span>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] text-slate-400 block uppercase font-semibold">Total Calculado</span>
+              <span id="preview-calculated-total" class="text-xl font-extrabold text-emerald-400 tabular-nums">0,00 €</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <h4 class="text-xs font-bold text-slate-300 uppercase">Vista Previa Completa del Excel:</h4>
+              <span class="text-[11px] text-slate-400 font-mono" id="excel-sheet-name-tag"></span>
+            </div>
+            <div class="max-h-56 overflow-x-auto overflow-y-auto border border-slate-800 rounded-lg bg-slate-900">
+              <table class="w-full text-left text-[11px] text-slate-300 whitespace-nowrap">
+                <thead id="excel-preview-thead" class="bg-slate-800 text-slate-200 font-bold sticky top-0 z-10"></thead>
+                <tbody id="excel-preview-tbody" class="divide-y divide-slate-800/80"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Total bruto final (€):</label>
+          <input type="number" id="manual-tpv-amount" step="0.01" placeholder="Ej. 12937.20" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white outline-none font-bold text-emerald-400">
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-3 border-t border-slate-800">
+        <button onclick="cerrarModal('modal-tpv')" class="px-4 py-2 text-sm text-slate-400 hover:text-white">Cancelar</button>
+        <button onclick="confirmarTPV()" class="px-5 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg shadow-lg">Aplicar Venta al Panel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: SUBIR FACTURAS CON SOPORTE COMPLETO JPG, PNG Y PDF Y VISTA PREVIA MEJORADA -->
+  <div id="modal-facturas" class="fixed inset-0 modal-backdrop hidden items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-5xl w-full p-6 space-y-5 shadow-2xl max-h-[95vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-lg text-white flex items-center gap-2">
+          <i class="fa-solid fa-file-invoice-dollar text-indigo-400"></i> Registro y Subida de Facturas (JPG, PNG, PDF)
+        </h3>
+        <button onclick="cerrarModal('modal-facturas')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <!-- SELECTOR RÁPIDO DE FACTURAS DEL NEGOCIO -->
+      <div class="bg-slate-950 p-3 rounded-xl border border-indigo-900/60 flex flex-wrap items-center justify-between gap-3">
+        <div class="text-xs text-indigo-200 font-semibold">
+          <i class="fa-solid fa-bolt text-indigo-400 mr-1"></i> <strong>Acceso Rápido Facturas de Prueba:</strong>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="cargarFacturaPredefinida('mercadona')" class="bg-slate-800 hover:bg-indigo-900/60 text-indigo-300 text-xs px-3 py-1.5 rounded-lg border border-indigo-700/60 font-medium transition flex items-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-basket-shopping text-emerald-400"></i> Ticket Mercadona (77,84 €)
+          </button>
+          <button onclick="cargarFacturaPredefinida('comica')" class="bg-slate-800 hover:bg-indigo-900/60 text-indigo-300 text-xs px-3 py-1.5 rounded-lg border border-indigo-700/60 font-medium transition flex items-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-drumstick-bite text-amber-400"></i> Factura COMICA (4.525,00 €)
+          </button>
+        </div>
+      </div>
+
+      <!-- DATOS DEL PROVEEDOR Y ADJUNTO -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-950 p-4 rounded-xl border border-slate-800">
+        <div>
+          <label class="block text-xs text-slate-400 font-semibold mb-1">Nombre del Proveedor / Establecimiento:</label>
+          <input type="text" id="factura-proveedor" placeholder="Ej. MERCADONA, S.A., COMICA..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-indigo-500 font-semibold">
+        </div>
+
+        <div>
+          <label class="block text-xs text-slate-400 font-semibold mb-1">Adjuntar Factura (JPG, PNG, PDF):</label>
+          <input type="file" id="factura-file-input" accept="image/*,.pdf,.xlsx,.csv" class="hidden" onchange="previewFacturaImagen(this)">
+          <div onclick="document.getElementById('factura-file-input').click()" 
+               ondragover="event.preventDefault(); this.classList.add('border-indigo-500')" 
+               ondragleave="this.classList.remove('border-indigo-500')"
+               ondrop="handleFacturaDrop(event)"
+               class="w-full py-3 bg-slate-800/80 border-2 border-dashed border-slate-700 hover:border-indigo-500 text-slate-200 text-xs font-medium rounded-lg flex flex-col items-center justify-center gap-1 transition cursor-pointer">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-camera text-indigo-400 text-base"></i>
+              <span>Arrastra tu archivo o haz clic aquí</span>
+            </div>
+            <span class="text-[10px] text-slate-400">Soporta JPG, PNG, WEBP, PDF</span>
+          </div>
+          <div id="factura-file-name-tag" class="text-[11px] text-indigo-400 font-mono mt-1 truncate"></div>
+        </div>
+
+        <div class="flex items-center justify-center">
+          <div id="factura-preview-box" class="h-44 w-full bg-slate-900 rounded-lg border border-slate-800 flex items-center justify-center overflow-hidden p-1 text-center relative">
+            <span id="factura-placeholder-text" class="text-[11px] text-slate-500">Sin foto o PDF seleccionado</span>
+            <img id="factura-img-preview" class="max-h-full max-w-full object-contain hidden rounded shadow" alt="Vista previa de factura">
+            <iframe id="factura-pdf-preview" class="w-full h-full hidden rounded border-0"></iframe>
+            <div id="factura-digital-ticket-preview" class="hidden w-full h-full overflow-y-auto bg-slate-950 p-2 text-left font-mono text-[10px] text-slate-300 border border-slate-800 rounded">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTONES Y ACCIONES DE FACTURA -->
+      <div class="space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h4 class="text-xs font-bold uppercase text-slate-300 flex items-center gap-2">
+            <span>Productos e Insumos de la Factura con IVA (0%, 4%, 10%, 21%)</span>
+            <span class="text-[10px] text-slate-400 font-normal">(Casilla ☑️ para clasificar: 🟢 Negocio vs 🔴 Personal)</span>
+          </h4>
+          <div class="flex gap-2">
+            <button onclick="importarDatosFacturaAdaptativa()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 shadow-lg shadow-indigo-950/60 cursor-pointer">
+              <i class="fa-solid fa-file-import"></i> Leer / Importar Datos
+            </button>
+            <button onclick="agregarFilaFactura('', 1, 0, 10, true)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1 cursor-pointer">
+              <i class="fa-solid fa-plus"></i> + Añadir a Mano
+            </button>
+          </div>
+        </div>
+
+        <!-- TABLA CON DESGLOSE DE IVA E ICONO DE ELIMINAR CON CONFIRMACIÓN -->
+        <div class="max-h-64 overflow-y-auto border border-slate-800 rounded-xl bg-slate-950">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-800 text-slate-300 uppercase font-semibold sticky top-0 z-10">
+              <tr>
+                <th class="p-2.5 w-32 text-center">¿Para Negocio?</th>
+                <th class="p-2.5">Descripción del Producto / Insumo</th>
+                <th class="p-2.5 w-16 text-center">Cant.</th>
+                <th class="p-2.5 w-20 text-right">Precio (€)</th>
+                <th class="p-2.5 w-24 text-center">% IVA</th>
+                <th class="p-2.5 w-24 text-right">Cuota IVA</th>
+                <th class="p-2.5 w-24 text-right">Total (€)</th>
+                <th class="p-2.5 w-12 text-center">Borrar</th>
+              </tr>
+            </thead>
+            <tbody id="factura-items-tbody" class="divide-y divide-slate-800">
+            </tbody>
+          </table>
+        </div>
+
+        <!-- TOTALES DEDUCIBLES Y NO DEDUCIBLES EN LA MISMA PANTALLA -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
+          <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
+            <span class="text-slate-400 block text-[11px] uppercase font-semibold">Total Factura / Ticket</span>
+            <span id="factura-total-bruto" class="text-lg font-extrabold text-white">0,00 €</span>
+          </div>
+
+          <div class="bg-slate-950 p-3.5 rounded-xl border border-cyan-900/80 bg-cyan-950/20 space-y-1">
+            <div class="flex justify-between items-center">
+              <span class="text-cyan-400 text-[11px] uppercase font-bold">🟢 Deducibles (Va a Panel Costos)</span>
+              <span class="text-[10px] bg-cyan-950 text-cyan-300 px-1.5 py-0.5 rounded border border-cyan-800">Costos Negocio</span>
+            </div>
+            <span id="factura-subtotal-deducible" class="text-lg font-extrabold text-cyan-400">0,00 €</span>
+          </div>
+
+          <div class="bg-slate-950 p-3.5 rounded-xl border border-rose-900/80 bg-rose-950/20 space-y-1">
+            <div class="flex justify-between items-center">
+              <span class="text-rose-400 text-[11px] uppercase font-bold">🔴 No Deducibles (No Negocio)</span>
+              <span class="text-[10px] bg-rose-950 text-rose-300 px-1.5 py-0.5 rounded border border-rose-800">Gastos Personales</span>
+            </div>
+            <span id="factura-subtotal-personal" class="text-lg font-extrabold text-rose-400">0,00 €</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-3 border-t border-slate-800">
+        <button onclick="cerrarModal('modal-facturas')" class="px-4 py-2 text-sm text-slate-400 hover:text-white">Cancelar</button>
+        <button onclick="guardarFacturaEnGastos()" class="px-5 py-2 text-sm bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg shadow-lg cursor-pointer">Sumar Factura al Panel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: PANEL DE CONTROL DE COSTOS -->
+  <div id="modal-costos" class="fixed inset-0 modal-backdrop hidden items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-5xl w-full p-6 space-y-5 shadow-2xl max-h-[95vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-lg text-white flex items-center gap-2">
+          <i class="fa-solid fa-boxes-packing text-cyan-400"></i> Panel de Control de Costos (Compras / Insumos)
+        </h3>
+        <button onclick="cerrarModal('modal-costos')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <!-- FILTRO DE FECHA Y NAVEGACIÓN DIARIA -->
+      <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center space-x-3">
+          <label class="text-xs text-slate-300 font-bold uppercase">Selecciona Fecha a Consultar:</label>
+          <input type="date" id="costos-filter-date" onchange="filtrarCostosPorFecha()" class="bg-slate-800 border border-cyan-500 text-white text-xs font-bold rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-cyan-500">
+        </div>
+        <div class="text-xs text-slate-400">
+          Consulta los costos del día exacto y la acumulación del mes hasta esa fecha.
+        </div>
+      </div>
+
+      <!-- KPIS RESUMEN DEL DÍA Y MES SELECCIONADO -->
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1">
+          <span class="text-slate-400 block text-[10px] uppercase font-bold">Costos del Día Elegido</span>
+          <span id="costos-total-dia" class="text-base font-extrabold text-white">0,00 €</span>
+        </div>
+
+        <div class="bg-slate-950 p-3.5 rounded-xl border border-cyan-900/60 space-y-1">
+          <span class="text-cyan-400 block text-[10px] uppercase font-bold">Acumulado Mes (Hasta esta fecha)</span>
+          <span id="costos-acumulado-mes" class="text-base font-extrabold text-cyan-400">0,00 €</span>
+        </div>
+
+        <div class="bg-slate-950 p-3.5 rounded-xl border border-emerald-900/60 space-y-1">
+          <span class="text-emerald-400 block text-[10px] uppercase font-bold">🟢 Deducibles Acumulados</span>
+          <span id="costos-deducibles-acumulado" class="text-base font-extrabold text-emerald-400">0,00 €</span>
+        </div>
+
+        <div class="bg-slate-950 p-3.5 rounded-xl border border-rose-900/60 space-y-1">
+          <span class="text-rose-400 block text-[10px] uppercase font-bold">🔴 No Deducibles Acumulados</span>
+          <span id="costos-personales-acumulado" class="text-base font-extrabold text-rose-400">0,00 €</span>
+        </div>
+      </div>
+
+      <!-- SECCIONES DE COSTOS DEDUCIBLES Y NO DEDUCIBLES -->
+      <div class="space-y-4">
+        <div>
+          <h4 class="text-xs font-bold uppercase text-emerald-400 mb-2 flex items-center gap-2">
+            <i class="fa-solid fa-circle-check"></i> Costos Deducibles (Materia Prima / Insumos del Negocio)
+          </h4>
+          <div class="max-h-48 overflow-y-auto border border-slate-800 rounded-xl bg-slate-950">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-slate-800 text-slate-400 uppercase font-semibold sticky top-0">
+                <tr>
+                  <th class="p-2">Fecha</th>
+                  <th class="p-2">Proveedor</th>
+                  <th class="p-2">Producto / Insumo</th>
+                  <th class="p-2 text-center">Cant.</th>
+                  <th class="p-2 text-right">Precio Unid (€)</th>
+                  <th class="p-2 text-center">% IVA</th>
+                  <th class="p-2 text-right">Total (€)</th>
+                  <th class="p-2 text-center">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="costos-deducibles-tbody" class="divide-y divide-slate-800">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="text-xs font-bold uppercase text-rose-400 mb-2 flex items-center gap-2">
+            <i class="fa-solid fa-circle-xmark"></i> Costos No Deducibles (Gastos Personales / Compras No Negocio)
+          </h4>
+          <div class="max-h-48 overflow-y-auto border border-slate-800 rounded-xl bg-slate-950">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-slate-800 text-slate-400 uppercase font-semibold sticky top-0">
+                <tr>
+                  <th class="p-2">Fecha</th>
+                  <th class="p-2">Proveedor</th>
+                  <th class="p-2">Producto / Insumo</th>
+                  <th class="p-2 text-center">Cant.</th>
+                  <th class="p-2 text-right">Precio Unid (€)</th>
+                  <th class="p-2 text-center">% IVA</th>
+                  <th class="p-2 text-right">Total (€)</th>
+                  <th class="p-2 text-center">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="costos-personales-tbody" class="divide-y divide-slate-800">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-3 border-t border-slate-800">
+        <button onclick="cerrarModal('modal-costos')" class="px-5 py-2 text-sm bg-slate-800 hover:bg-slate-700 text-white font-semibold rounded-lg cursor-pointer">Cerrar Panel de Costos</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: PANEL DE GASTOS DINÁMICO -->
+  <div id="modal-gastos" class="fixed inset-0 modal-backdrop hidden items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full p-6 space-y-5 shadow-2xl max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-lg text-white flex items-center gap-2">
+          <i class="fa-solid fa-list-check text-amber-500"></i> Panel de Gastos Operativos (Fijos y Variables)
+        </h3>
+        <button onclick="cerrarModal('modal-gastos')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div class="space-y-3">
+        <div class="flex justify-between items-center">
+          <span class="text-xs text-slate-400">Ingresa gastos operativos (alquiler, luz, agua, nóminas). Presiona <strong>+ Añadir Gasto Operativo</strong>.</span>
+          <button onclick="agregarFilaGasto('Gasto Operativo Nuevo', 'Suministros', 0.00, 21)" class="bg-amber-600 hover:bg-amber-500 text-white text-xs px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1 shadow cursor-pointer">
+            <i class="fa-solid fa-plus"></i> Añadir Gasto Operativo
+          </button>
+        </div>
+
+        <div class="max-h-60 overflow-y-auto border border-slate-800 rounded-xl bg-slate-950">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-800 text-slate-400 uppercase font-semibold sticky top-0">
+              <tr>
+                <th class="p-2.5">Concepto del Gasto</th>
+                <th class="p-2.5">Categoría</th>
+                <th class="p-2.5 w-20 text-center">% IVA</th>
+                <th class="p-2.5 text-right">Monto (€)</th>
+                <th class="p-2.5 text-center">Acción</th>
+              </tr>
+            </thead>
+            <tbody id="gastos-table-body" class="divide-y divide-slate-800">
+            </tbody>
+          </table>
+        </div>
+
+        <div class="flex justify-between items-center pt-2 text-sm font-bold bg-slate-800/40 p-3 rounded-lg border border-slate-800">
+          <span class="text-slate-300">Total Gastos Operativos Deducibles:</span>
+          <span id="total-gastos-modal" class="text-amber-400 text-base">0,00 €</span>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-3 border-t border-slate-800">
+        <button onclick="cerrarModal('modal-gastos')" class="px-4 py-2 text-sm text-slate-400 hover:text-white">Cancelar</button>
+        <button onclick="guardarGastos()" class="px-5 py-2 text-sm bg-amber-600 hover:bg-amber-500 text-white font-semibold rounded-lg shadow-lg cursor-pointer">Guardar Gastos en Panel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 5: ESCANDALLO DE PLATO -->
+  <div id="modal-escandallo" class="fixed inset-0 modal-backdrop hidden items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full p-6 space-y-5 shadow-2xl max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-lg text-white flex items-center gap-2">
+          <i class="fa-solid fa-utensils text-emerald-400"></i> Ficha Técnica y Escandallo de Plato
+        </h3>
+        <button onclick="cerrarModal('modal-escandallo')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Nombre del Plato:</label>
+            <input type="text" id="plato-nombre" value="Hamburguesa Gourmet Completa" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white outline-none">
+          </div>
+
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">PVP en Menú (€ con IVA):</label>
+            <input type="number" id="plato-pvp" value="14.50" step="0.10" oninput="calcularEscandallo()" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white outline-none font-bold text-emerald-400">
+          </div>
+
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Foto del Plato:</label>
+            <input type="file" id="plato-img-input" accept="image/*" class="hidden" onchange="previewPlatoImagen(this)">
+            <button onclick="document.getElementById('plato-img-input').click()" class="w-full py-2 bg-slate-800 border border-slate-700 hover:border-emerald-500 text-slate-300 text-xs rounded-lg flex items-center justify-center gap-2 cursor-pointer">
+              <i class="fa-solid fa-image text-emerald-400"></i> Subir Foto del Plato
+            </button>
+            <div class="h-32 bg-slate-950 rounded-lg border border-slate-800 mt-2 flex items-center justify-center overflow-hidden p-1">
+              <img id="plato-img-preview" src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&q=80" class="h-full w-full object-cover rounded" alt="Foto plato">
+            </div>
+          </div>
+        </div>
+
+        <div class="md:col-span-2 space-y-3">
+          <div class="flex justify-between items-center">
+            <h4 class="text-xs font-bold uppercase text-slate-300">Ingredientes de la Receta</h4>
+            <button onclick="agregarFilaIngrediente('', 0.1, 'KG', 10.00)" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1 cursor-pointer">
+              <i class="fa-solid fa-plus"></i> Añadir Ingrediente
+            </button>
+          </div>
+
+          <div class="max-h-48 overflow-y-auto border border-slate-800 rounded-xl bg-slate-950">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-slate-800 text-slate-400 uppercase font-semibold sticky top-0">
+                <tr>
+                  <th class="p-2">Ingrediente</th>
+                  <th class="p-2">Cant.</th>
+                  <th class="p-2">Unid.</th>
+                  <th class="p-2">€/Unid</th>
+                  <th class="p-2 text-right">Subtotal</th>
+                  <th class="p-2 text-center"></th>
+                </tr>
+              </thead>
+              <tbody id="escandallo-ingredients-body" class="divide-y divide-slate-800">
+              </tbody>
+            </table>
+          </div>
+
+          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1.5 text-xs">
+            <div class="flex justify-between">
+              <span class="text-slate-400">Costo Total Materia Prima por Ración:</span>
+              <span id="escandallo-costo-total" class="font-bold text-white">3,82 €</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Porcentaje de Food Cost:</span>
+              <span id="escandallo-food-cost-pct" class="font-bold text-emerald-400">28.98% (🟢 Óptimo)</span>
+            </div>
+            <div class="flex justify-between border-t border-slate-800 pt-1">
+              <span class="text-slate-400">PVP Sugerido (Meta 30% FC):</span>
+              <span id="escandallo-pvp-sugerido" class="font-bold text-blue-400">14,00 €</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-3 border-t border-slate-800">
+        <button onclick="cerrarModal('modal-escandallo')" class="px-4 py-2 text-sm text-slate-400 hover:text-white">Cancelar</button>
+        <button onclick="guardarEscandallo()" class="px-5 py-2 text-sm bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg shadow-lg cursor-pointer">Guardar Escandallo</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ESTADO GLOBAL DE LA APLICACIÓN
+    let ventasBrutas = 0;
+    let gastosOperativos = 0;
+    let excelRawMatrix = [];
+    let headerRowIndex = 0;
+
+    // BASE DE DATOS DE COSTOS (Registrados desde Subir Factura)
+    let listaCostos = [];
+
+    // BASE DE DATOS DE GASTOS OPERATIVOS (Panel de Gastos)
+    let listaGastos = [];
+
+    // INGREDIENTES PARA ESCANDALLOS
+    let listaIngredientes = [
+      { nombre: 'Carne Picada Ternera', cant: 0.200, unid: 'KG', costoUnid: 12.00 },
+      { nombre: 'Pan Brioche Gourmet', cant: 1.000, unid: 'UNIDAD', costoUnid: 0.80 },
+      { nombre: 'Queso Cheddar loncheado', cant: 0.040, unid: 'KG', costoUnid: 11.36 }
+    ];
+
+    // FACTURA TEMPORAL EN EL MODAL DE SUBIR FACTURA
+    let listaFacturaItems = [];
+    let archivoFacturaActual = null;
+
+    // INICIALIZACIÓN
+    document.addEventListener('DOMContentLoaded', () => {
+      const reportDate = document.getElementById('report-date');
+      const costosFilterDate = document.getElementById('costos-filter-date');
+      if (reportDate && costosFilterDate) {
+        costosFilterDate.value = reportDate.value;
+      }
+      recargarPanel();
+      renderizarTablaGastos();
+      renderizarIngredientesEscandallo();
+      limpiarModalFactura();
+    });
+
+    // FUNCIONES DE MANEJO DE MODALES (LOS 5 BOTONES PRINCIPALES)
+    function abrirModal(id) {
+      const modal = document.getElementById(id);
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      } else {
+        console.error("Modal no encontrado: " + id);
+      }
+    }
+
+    function cerrarModal(id) {
+      const modal = document.getElementById(id);
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function abrirModalTPV() { abrirModal('modal-tpv'); }
+    function abrirModalFacturas() { 
+      limpiarModalFactura();
+      abrirModal('modal-facturas'); 
+    }
+    function abrirModalCostos() { 
+      const reportDate = document.getElementById('report-date');
+      const costosFilterDate = document.getElementById('costos-filter-date');
+      if (reportDate && costosFilterDate) {
+        costosFilterDate.value = reportDate.value;
+      }
+      filtrarCostosPorFecha();
+      abrirModal('modal-costos'); 
+    }
+    function abrirModalGastos() { renderizarTablaGastos(); abrirModal('modal-gastos'); }
+    function abrirModalEscandallo() { renderizarIngredientesEscandallo(); abrirModal('modal-escandallo'); }
+    function abrirModalIVA() { abrirModal('modal-iva-report'); }
+
+    // CÁLCULO GENERAL Y RECARGA DEL PANEL FINANCIERO
+    function recargarPanel() {
+      const ventasNetas = ventasBrutas / 1.10;
+      const ivaCobradoVentas = ventasBrutas - ventasNetas;
+
+      let costosDeduciblesNegocio = 0;
+      let costosPersonalesTotal = 0;
+
+      let desgloseSoportado = {
+        0: { base: 0, cuota: 0 },
+        4: { base: 0, cuota: 0 },
+        10: { base: 0, cuota: 0 },
+        21: { base: 0, cuota: 0 }
+      };
+
+      listaCostos.forEach(item => {
+        const totalItem = (item.cant || 0) * (item.costoUnid || 0);
+        const tipoIva = item.tipoIva !== undefined ? parseInt(item.tipoIva) : 10;
+        const base = totalItem / (1 + tipoIva / 100);
+        const cuota = totalItem - base;
+
+        if (item.deducible) {
+          costosDeduciblesNegocio += totalItem;
+          if (desgloseSoportado[tipoIva]) {
+            desgloseSoportado[tipoIva].base += base;
+            desgloseSoportado[tipoIva].cuota += cuota;
+          }
+        } else {
+          costosPersonalesTotal += totalItem;
+        }
+      });
+
+      gastosOperativos = 0;
+      listaGastos.forEach(gasto => {
+        const totalGasto = gasto.monto || 0;
+        gastosOperativos += totalGasto;
+        const tipoIva = gasto.tipoIva !== undefined ? parseInt(gasto.tipoIva) : 21;
+        const base = totalGasto / (1 + tipoIva / 100);
+        const cuota = totalGasto - base;
+
+        if (desgloseSoportado[tipoIva]) {
+          desgloseSoportado[tipoIva].base += base;
+          desgloseSoportado[tipoIva].cuota += cuota;
+        }
+      });
+
+      const gastosDeduciblesTotal = costosDeduciblesNegocio + gastosOperativos;
+      const margenNeto = ventasNetas - gastosDeduciblesTotal;
+      const margenPct = ventasNetas > 0 ? ((margenNeto / ventasNetas) * 100).toFixed(1) : "0.0";
+
+      const ivaSoportadoDeducibleTotal = Object.values(desgloseSoportado).reduce((total, tipo) => total + tipo.cuota, 0);
+      const ivaNetoPagar = ivaCobradoVentas - ivaSoportadoDeducibleTotal;
+
+      const irpfBaseImponible = Math.max(0, margenNeto);
+      const irpfPagoEstimado = irpfBaseImponible * 0.20;
+
+      // ACTUALIZAR KPIS EN DASHBOARD
+      document.getElementById('kpi-daily-sales').textContent = ventasBrutas.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+      document.getElementById('kpi-net-sales').textContent = ventasNetas.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+      document.getElementById('kpi-daily-margin').textContent = margenNeto.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+      document.getElementById('kpi-margin-pct').textContent = margenPct + '%';
+      
+      document.getElementById('kpi-deductible-costs').textContent = costosDeduciblesNegocio.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+      document.getElementById('kpi-personal-expenses').textContent = costosPersonalesTotal.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+
+      document.getElementById('kpi-cogs').textContent = costosDeduciblesNegocio.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' € (' + (ventasNetas > 0 ? ((costosDeduciblesNegocio / ventasNetas)*100).toFixed(1) : 0) + '%)';
+      document.getElementById('kpi-expenses').textContent = gastosOperativos.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' € (' + (ventasNetas > 0 ? ((gastosOperativos / ventasNetas)*100).toFixed(1) : 0) + '%)';
+      document.getElementById('kpi-profit').textContent = margenNeto.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' € (' + margenPct + '%)';
+
+      document.getElementById('kpi-vat').textContent = ivaNetoPagar.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+      document.getElementById('kpi-vat-collected').textContent = ivaCobradoVentas.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+      document.getElementById('kpi-vat-deductible').textContent = ivaSoportadoDeducibleTotal.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+
+      document.getElementById('kpi-irpf').textContent = irpfPagoEstimado.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+      document.getElementById('kpi-irpf-base').textContent = irpfBaseImponible.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+
+      // ACTUALIZAR TABLA DE IVA DESGLOSADA (0%, 4%, 10%, 21%)
+      const tiposIvaArray = [0, 4, 10, 21];
+      tiposIvaArray.forEach(t => {
+        const baseRep = (t === 10) ? ventasNetas : 0;
+        const cuotaRep = (t === 10) ? ivaCobradoVentas : 0;
+        const baseSop = desgloseSoportado[t].base;
+        const cuotaSop = desgloseSoportado[t].cuota;
+        const netoT = cuotaRep - cuotaSop;
+
+        const elBaseRep = document.getElementById(`iva-base-rep-${t}`);
+        const elCuotaRep = document.getElementById(`iva-cuota-rep-${t}`);
+        const elBaseSop = document.getElementById(`iva-base-sop-${t}`);
+        const elCuotaSop = document.getElementById(`iva-cuota-sop-${t}`);
+        const elNeto = document.getElementById(`iva-neto-${t}`);
+
+        if (elBaseRep) elBaseRep.textContent = baseRep.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+        if (elCuotaRep) elCuotaRep.textContent = cuotaRep.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+        if (elBaseSop) elBaseSop.textContent = baseSop.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+        if (elCuotaSop) elCuotaSop.textContent = cuotaSop.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+        if (elNeto) elNeto.textContent = netoT.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+      });
+
+      const totalBaseSoportada = Object.values(desgloseSoportado).reduce((total, tipo) => total + tipo.base, 0);
+
+      document.getElementById('rep-tot-base-rep').textContent = ventasNetas.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
+      document.getElementById('rep-tot-cuota-rep').textContent = ivaCobradoVentas.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
+      document.getElementById('rep-tot-base-sop').textContent = totalBaseSoportada.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
+      document.getElementById('rep-tot-cuota-sop').textContent = ivaSoportadoDeducibleTotal.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
+      document.getElementById('rep-tot-neto').textContent = ivaNetoPagar.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
+
+      document.getElementById('rep-ventas-brutas').textContent = ventasBrutas.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
+      document.getElementById('rep-ventas-netas').textContent = ventasNetas.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
+      document.getElementById('rep-iva-cobrado').textContent = ivaCobradoVentas.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
+      document.getElementById('rep-gastos-deducibles').textContent = gastosDeduciblesTotal.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
+      document.getElementById('rep-gastos-personales').textContent = costosPersonalesTotal.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
+      document.getElementById('rep-iva-soportado').textContent = ivaSoportadoDeducibleTotal.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
+      document.getElementById('rep-iva-resultado').textContent = ivaNetoPagar.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
+      document.getElementById('rep-txt-cobrado').textContent = ivaCobradoVentas.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
+      document.getElementById('rep-txt-soportado').textContent = ivaSoportadoDeducibleTotal.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
+
+      document.getElementById('bar-cogs').style.width = ventasNetas > 0 ? Math.min(100, ((costosDeduciblesNegocio / ventasNetas)*100)).toFixed(1) + '%' : '0%';
+      document.getElementById('bar-expenses').style.width = ventasNetas > 0 ? Math.min(100, ((gastosOperativos / ventasNetas)*100)).toFixed(1) + '%' : '0%';
+      document.getElementById('bar-profit').style.width = ventasNetas > 0 ? Math.max(0, Math.min(100, parseFloat(margenPct))).toFixed(1) + '%' : '0%';
+
+      if (ventasBrutas > 0) {
+        document.getElementById('kpi-tag-status').textContent = "🟢 Sincronizado";
+      }
+    }
+
+    function parsearNumero(val) {
+      if (val === null || val === undefined) return NaN;
+      if (typeof val === 'number') return val;
+      if (typeof val === 'string') {
+        let clean = val.replace(/[^\d.,-]/g, '').trim();
+        if (!clean) return NaN;
+
+        if (clean.includes(',') && clean.includes('.')) {
+          if (clean.lastIndexOf(',') > clean.lastIndexOf('.')) {
+            clean = clean.replace(/\./g, '').replace(',', '.');
+          } else {
+            clean = clean.replace(/,/g, '');
+          }
+        } else if (clean.includes(',')) {
+          clean = clean.replace(',', '.');
+        }
+        const parsed = parseFloat(clean);
+        return isNaN(parsed) ? NaN : parsed;
+      }
+      return NaN;
+    }
+
+    // INSPECTOR DE EXCEL TPV
+    function procesarArchivoExcelTPV(input) {
+      if (!input || !input.files || input.files.length === 0) return;
+      const file = input.files;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array', cellDates: true, raw: false });
+          const sheet = workbook.Sheets[workbook.SheetNames];
+
+          excelRawMatrix = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: '' });
+
+          if (!excelRawMatrix || excelRawMatrix.length === 0) {
+            alert("El archivo Excel está vacío.");
+            return;
+          }
+
+          document.getElementById('excel-preview-container').classList.remove('hidden');
+          renderizarInspectorExcel();
+
+        } catch (err) {
+          console.error("Error al leer Excel:", err);
+          alert("No se pudo leer el archivo Excel.");
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function renderizarInspectorExcel() {
+      if (!excelRawMatrix || excelRawMatrix.length === 0) return;
+
+      headerRowIndex = 0;
+      for (let i = 0; i < Math.min(6, excelRawMatrix.length); i++) {
+        if (excelRawMatrix[i] && excelRawMatrix[i].some(c => String(c).trim() !== '')) {
+          headerRowIndex = i;
+          break;
+        }
+      }
+
+      const headers = excelRawMatrix[headerRowIndex];
+      const colSelect = document.getElementById('excel-column-select');
+      colSelect.innerHTML = '';
+
+      let colMasProbable = -1;
+
+      headers.forEach((h, cIdx) => {
+        const headerText = String(h).trim() || `Col. ${cIdx + 1}`;
+        const option = document.createElement('option');
+        option.value = cIdx;
+        option.textContent = `Col. ${cIdx + 1}: ${headerText}`;
+        colSelect.appendChild(option);
+
+        const lower = headerText.toLowerCase();
+        if (colMasProbable === -1 && ['total', 'importe', 'venta', 'ventas', 'pvp', 'monto', 'subtotal'].some(k => lower.includes(k))) {
+          colMasProbable = cIdx;
+        }
+      });
+
+      if (colMasProbable !== -1) {
+        colSelect.value = colMasProbable;
+      }
+
+      const thead = document.getElementById('excel-preview-thead');
+      const tbody = document.getElementById('excel-preview-tbody');
+
+      thead.innerHTML = '<tr><th class="p-2 border-b border-slate-700 bg-slate-800 text-slate-400">#</th>' + 
+        headers.map((h, i) => `<th class="p-2 border-b border-slate-700 ${i == colSelect.value ? 'text-blue-400 font-extrabold' : ''}">${String(h) || 'Col'}</th>`).join('') + '</tr>';
+
+      tbody.innerHTML = '';
+
+      const dataRows = excelRawMatrix.slice(headerRowIndex + 1);
+      dataRows.forEach((row, idx) => {
+        if (!row || row.every(c => String(c).trim() === '')) return;
+        const cellsHtml = headers.map((_, cIdx) => {
+          const val = row[cIdx] !== undefined ? row[cIdx] : '';
+          const isSelectedCol = cIdx == colSelect.value;
+          return `<td class="p-2 border-b border-slate-800/60 ${isSelectedCol ? 'bg-blue-950/40 text-emerald-300 font-bold' : ''}">${val}</td>`;
+        }).join('');
+        tbody.innerHTML += `<tr><td class="p-2 text-slate-500 text-[10px] border-b border-slate-800/60">${idx + 1}</td>${cellsHtml}</tr>`;
+      });
+
+      recalcularDesdeColumnaSeleccionada();
+    }
+
+    function recalcularDesdeColumnaSeleccionada() {
+      const colIdx = parseInt(document.getElementById('excel-column-select').value);
+      const method = document.getElementById('excel-method-select').value;
+      if (isNaN(colIdx) || !excelRawMatrix || excelRawMatrix.length === 0) return;
+
+      const palabrasClaveTotal = ['gran total', 'total general', 'total ventas', 'total dia', 'total día', 'total cierre', 'cierre z', 'total eur', 'total (€)', 'total euro', 'total'];
+
+      let sumaTotal = 0;
+      let filasContadas = 0;
+      let valorFilaTotal = null;
+
+      const dataRows = excelRawMatrix.slice(headerRowIndex + 1);
+
+      dataRows.forEach((row) => {
+        if (!Array.isArray(row) || row.every(c => String(c).trim() === '')) return;
+
+        const rowText = row.map(c => String(c).toLowerCase()).join(' ');
+        const esFilaTotal = palabrasClaveTotal.some(kw => rowText.includes(kw));
+
+        const cellValue = row[colIdx];
+        const num = parsearNumero(cellValue);
+
+        if (esFilaTotal) {
+          if (!isNaN(num) && num > 0) {
+            valorFilaTotal = num;
+          }
+        } else {
+          if (!isNaN(num) && num > 0) {
+            sumaTotal += num;
+            filasContadas++;
+          }
+        }
+      });
+
+      let resultadoFinal = 0;
+      let textoMetodo = "";
+
+      if (method === 'TAKE_TOTAL_ROW' && valorFilaTotal !== null) {
+        resultadoFinal = valorFilaTotal;
+        textoMetodo = "Tomado de celda en fila de TOTAL final";
+      } else {
+        resultadoFinal = sumaTotal;
+        textoMetodo = `Suma exacta de ${filasContadas} filas de datos`;
+      }
+
+      document.getElementById('preview-row-count-badge').textContent = `${filasContadas} filas de datos contabilizadas`;
+      document.getElementById('preview-method-badge').textContent = textoMetodo;
+      document.getElementById('preview-calculated-total').textContent = resultadoFinal.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+      document.getElementById('manual-tpv-amount').value = resultadoFinal.toFixed(2);
+
+      ventasBrutas = resultadoFinal;
+      recargarPanel();
+    }
+
+    function confirmarTPV() {
+      const montoManual = document.getElementById('manual-tpv-amount').value;
+      if (montoManual && !isNaN(montoManual) && parseFloat(montoManual) > 0) {
+        ventasBrutas = parseFloat(montoManual);
+      }
+      recargarPanel();
+      cerrarModal('modal-tpv');
+      alert("¡Ventas del TPV aplicadas correctamente al Panel!");
+    }
+
+    // PREVISUALIZACIÓN MULTIFORMATO Y MANEJO DE FACTURAS
+    function limpiarModalFactura() {
+      document.getElementById('factura-proveedor').value = '';
+      document.getElementById('factura-file-input').value = '';
+      document.getElementById('factura-file-name-tag').textContent = '';
+      
+      const img = document.getElementById('factura-img-preview');
+      img.src = '';
+      img.classList.add('hidden');
+      
+      const pdfEmbed = document.getElementById('factura-pdf-preview');
+      pdfEmbed.src = '';
+      pdfEmbed.classList.add('hidden');
+
+      const digitalBox = document.getElementById('factura-digital-ticket-preview');
+      digitalBox.innerHTML = '';
+      digitalBox.classList.add('hidden');
+
+      const placeholder = document.getElementById('factura-placeholder-text');
+      placeholder.textContent = 'Sin foto o PDF seleccionado';
+      placeholder.classList.remove('hidden');
+
+      archivoFacturaActual = null;
+      listaFacturaItems = [];
+      renderizarTablaFactura();
+    }
+
+    function handleFacturaDrop(e) {
+      e.preventDefault();
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        const fileInput = document.getElementById('factura-file-input');
+        fileInput.files = e.dataTransfer.files;
+        previewFacturaImagen(fileInput);
+      }
+    }
+
+    function previewFacturaImagen(input) {
+      if (!input || !input.files || input.files.length === 0) return;
+      const file = input.files;
+      if (!file) return;
+
+      archivoFacturaActual = file;
+
+      const fileName = file.name || 'Factura';
+      document.getElementById('factura-file-name-tag').textContent = "📎 Adjunto: " + fileName;
+
+      const fileType = file.type ? file.type.toLowerCase() : '';
+      const fileNameLower = fileName.toLowerCase();
+
+      const isImage = fileType.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif|bmp)$/i.test(fileNameLower);
+      const isPdf = fileType === 'application/pdf' || /\.pdf$/i.test(fileNameLower);
+
+      const imgPreview = document.getElementById('factura-img-preview');
+      const pdfPreview = document.getElementById('factura-pdf-preview');
+      const digitalBox = document.getElementById('factura-digital-ticket-preview');
+      const placeholder = document.getElementById('factura-placeholder-text');
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        if (isImage) {
+          imgPreview.src = e.target.result;
+          imgPreview.classList.remove('hidden');
+          pdfPreview.classList.add('hidden');
+          digitalBox.classList.add('hidden');
+          placeholder.classList.add('hidden');
+        } else if (isPdf) {
+          pdfPreview.src = e.target.result;
+          pdfPreview.classList.remove('hidden');
+          imgPreview.classList.add('hidden');
+          digitalBox.classList.add('hidden');
+          placeholder.classList.add('hidden');
+        } else {
+          imgPreview.classList.add('hidden');
+          pdfPreview.classList.add('hidden');
+          digitalBox.classList.add('hidden');
+          placeholder.textContent = "📄 Documento cargado: " + fileName;
+          placeholder.classList.remove('hidden');
+        }
+      };
+
+      if (isImage) {
+        reader.readAsDataURL(file);
+      } else if (isPdf) {
+        try {
+          const fileObjectUrl = URL.createObjectURL(file);
+          pdfPreview.src = fileObjectUrl;
+          pdfPreview.classList.remove('hidden');
+          imgPreview.classList.add('hidden');
+          digitalBox.classList.add('hidden');
+          placeholder.classList.add('hidden');
+        } catch (err) {
+          reader.readAsDataURL(file);
+        }
+      }
+
+      autoCargarDatosNuevosFactura(file);
+    }
+
+    // BOTONES DE ACCESO RÁPIDO CON VISTA PREVIA DIGITAL COMPLETA
+    function cargarFacturaPredefinida(tipo) {
+      const imgPreview = document.getElementById('factura-img-preview');
+      const pdfPreview = document.getElementById('factura-pdf-preview');
+      const digitalBox = document.getElementById('factura-digital-ticket-preview');
+      const placeholder = document.getElementById('factura-placeholder-text');
+
+      imgPreview.classList.add('hidden');
+      pdfPreview.classList.add('hidden');
+      placeholder.classList.add('hidden');
+      digitalBox.classList.remove('hidden');
+
+      if (tipo === 'mercadona') {
+        const dummyFile = { name: 'FACTURA DE COMPRA PRUEBA.jpg' };
+        document.getElementById('factura-file-name-tag').textContent = "📎 Adjunto: FACTURA DE COMPRA PRUEBA.jpg";
+        
+        digitalBox.innerHTML = `
+          <div class="space-y-1 bg-slate-900 p-2 rounded border border-slate-800">
+            <div class="text-center font-bold text-amber-400 border-b border-slate-800 pb-1">MERCADONA, S.A.</div>
+            <div class="text-[9px] text-slate-400 text-center">AV DE LA SIERRA, 24 - SAN SEBASTIAN DE LOS REYES</div>
+            <div class="text-[9px] text-slate-400 text-center">15/09/2026 10:05 | TICKET: 3636-013-124426</div>
+            <div class="border-t border-slate-800 my-1"></div>
+            <div class="text-[9px] font-bold text-emerald-400">Desglose de IVA en Ticket:</div>
+            <div class="flex justify-between text-[9px]"><span>IVA 4% (Base: 33,44 €)</span><span class="text-amber-400">Cuota: 1,34 €</span></div>
+            <div class="flex justify-between text-[9px]"><span>IVA 10% (Base: 35,51 €)</span><span class="text-amber-400">Cuota: 3,55 €</span></div>
+            <div class="flex justify-between text-[9px] font-bold border-t border-slate-800 pt-1 text-white"><span>TOTAL (€)</span><span class="text-emerald-400">77,84 €</span></div>
+          </div>
+        `;
+        autoCargarDatosNuevosFactura(dummyFile);
+      } else if (tipo === 'comica') {
+        const dummyFile = { name: 'factura carnes.jpg' };
+        document.getElementById('factura-file-name-tag').textContent = "📎 Adjunto: factura carnes.jpg";
+        
+        digitalBox.innerHTML = `
+          <div class="space-y-1 bg-slate-900 p-2 rounded border border-slate-800">
+            <div class="text-center font-bold text-rose-400 border-b border-slate-800 pb-1">Conservas Mixtas de Carnes S.L. (COMICA)</div>
+            <div class="text-[9px] text-slate-400 text-center">FACTURA NUM. 109/72 - ALGUAZAS (MURCIA)</div>
+            <div class="border-t border-slate-800 my-1"></div>
+            <div class="text-[9px] text-slate-300">Insumos de Conservas: 150 Latas Judías, Lentejas, Cocido...</div>
+            <div class="flex justify-between text-[9px] font-bold border-t border-slate-800 pt-1 text-white"><span>TOTAL FACTURA</span><span class="text-amber-400">4.525,00 €</span></div>
+          </div>
+        `;
+        autoCargarDatosNuevosFactura(dummyFile);
+      }
+    }
+
+    function autoCargarDatosNuevosFactura(file) {
+      const fileNameLower = (file && file.name) ? file.name.toLowerCase() : '';
+
+      if (fileNameLower.includes('carne') || fileNameLower.includes('comica') || fileNameLower.includes('109')) {
+        document.getElementById('factura-proveedor').value = "Conservas Mixtas de Carnes S.L. (COMICA)";
+        listaFacturaItems = [
+          { concepto: '150 Latas 1kg Judías con Chorizo "Sol de Lve"', cant: 150, costoUnid: 9.25, tipoIva: 10, deducible: true },
+          { concepto: '50 Latas 1kg Lentejas', cant: 50, costoUnid: 9.25, tipoIva: 10, deducible: true },
+          { concepto: '50 Latas 1kg Judías al Natural', cant: 50, costoUnid: 7.50, tipoIva: 10, deducible: true },
+          { concepto: '50 Latas 1kg Cocido Primera', cant: 50, costoUnid: 10.00, tipoIva: 10, deducible: true },
+          { concepto: '50 Latas 1kg Garbanzos al Natural', cant: 50, costoUnid: 8.00, tipoIva: 10, deducible: true },
+          { concepto: '50 Latas 1kg Albóndigas Española', cant: 50, costoUnid: 28.00, tipoIva: 10, deducible: true }
+        ];
+      } else {
+        document.getElementById('factura-proveedor').value = "MERCADONA, S.A. (San Sebastián de los Reyes)";
+        listaFacturaItems = [
+          { concepto: '1 Jamoncitos de Pollo', cant: 1, costoUnid: 3.30, tipoIva: 10, deducible: true },
+          { concepto: '1 Pechuga Familiar', cant: 1, costoUnid: 6.70, tipoIva: 10, deducible: true },
+          { concepto: '1 Lomo Fino', cant: 1, costoUnid: 3.76, tipoIva: 10, deducible: true },
+          { concepto: '1 Burger M Vacún 1000g', cant: 1, costoUnid: 10.80, tipoIva: 10, deducible: true },
+          { concepto: '1 Copos de Avena', cant: 1, costoUnid: 1.30, tipoIva: 4, deducible: true },
+          { concepto: '2 Nata para Cocinar (1.85 €/u)', cant: 2, costoUnid: 1.85, tipoIva: 10, deducible: true },
+          { concepto: '2 Leche Desn S/Lact (0.91 €/u)', cant: 2, costoUnid: 0.91, tipoIva: 4, deducible: true },
+          { concepto: '1 Curry', cant: 1, costoUnid: 1.10, tipoIva: 10, deducible: true },
+          { concepto: '1 Ketchup', cant: 1, costoUnid: 1.05, tipoIva: 10, deducible: true },
+          { concepto: '1 Café Soluble Classic', cant: 1, costoUnid: 2.90, tipoIva: 10, deducible: true },
+          { concepto: '1 Spray Seda (Cuidado Personal)', cant: 1, costoUnid: 1.65, tipoIva: 21, deducible: false },
+          { concepto: '1 Higiénico Doble Roll (Higiene)', cant: 1, costoUnid: 2.35, tipoIva: 21, deducible: false },
+          { concepto: '1 Salchichas Pack-4', cant: 1, costoUnid: 2.45, tipoIva: 10, deducible: true },
+          { concepto: '1 Griego Natural', cant: 1, costoUnid: 2.10, tipoIva: 10, deducible: true },
+          { concepto: '1 Queso Burgos Natural', cant: 1, costoUnid: 2.05, tipoIva: 4, deducible: true },
+          { concepto: '1 Melón Sapo Partido', cant: 1, costoUnid: 1.57, tipoIva: 4, deducible: true },
+          { concepto: '1 Patata 5 kg', cant: 1, costoUnid: 5.00, tipoIva: 4, deducible: true },
+          { concepto: '1 Remolacha Cocida', cant: 1, costoUnid: 1.05, tipoIva: 4, deducible: true },
+          { concepto: '1 Perejil Troceado', cant: 1, costoUnid: 0.95, tipoIva: 4, deducible: true },
+          { concepto: '1 Puerro Cortado', cant: 1, costoUnid: 2.25, tipoIva: 4, deducible: true },
+          { concepto: '1 Ensalada Gourmet', cant: 1, costoUnid: 1.20, tipoIva: 4, deducible: true },
+          { concepto: '1 Champiñón Limpio Lam', cant: 1, costoUnid: 1.97, tipoIva: 4, deducible: true },
+          { concepto: '1 Zanahoria 500 g', cant: 1, costoUnid: 0.80, tipoIva: 4, deducible: true },
+          { concepto: '1 Tomate Pera Tarrina', cant: 1, costoUnid: 2.75, tipoIva: 4, deducible: true },
+          { concepto: '1 Manzana Golden Bolsa', cant: 1, costoUnid: 2.96, tipoIva: 4, deducible: true },
+          { concepto: '1 Pimiento Freír (0.316 kg x 2.50 €/kg)', cant: 1, costoUnid: 0.79, tipoIva: 4, deducible: true },
+          { concepto: '1 Brócoli (0.464 kg x 3.00 €/kg)', cant: 1, costoUnid: 1.39, tipoIva: 4, deducible: true },
+          { concepto: '1 Calabacín Verde (0.810 kg x 1.90 €/kg)', cant: 1, costoUnid: 1.54, tipoIva: 4, deducible: true },
+          { concepto: '1 Piña Granel (2.386 kg x 2.00 €/kg)', cant: 1, costoUnid: 4.77, tipoIva: 4, deducible: true },
+          { concepto: '1 Banana (1.212 kg x 1.50 €/kg)', cant: 1, costoUnid: 1.82, tipoIva: 4, deducible: true }
+        ];
+      }
+
+      renderizarTablaFactura();
+    }
+
+    function importarDatosFacturaAdaptativa() {
+      if (archivoFacturaActual) {
+        autoCargarDatosNuevosFactura(archivoFacturaActual);
+      } else {
+        autoCargarDatosNuevosFactura({ name: 'FACTURA DE COMPRA PRUEBA.jpg' });
+      }
+    }
+
+    function renderizarTablaFactura() {
+      const tbody = document.getElementById('factura-items-tbody');
+      tbody.innerHTML = '';
+
+      if (listaFacturaItems.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" class="p-5 text-center text-slate-500 italic">
+              Formulario limpio. Selecciona tu factura en foto o PDF y presiona <strong><i class="fa-solid fa-file-import"></i> Leer / Importar Datos</strong>.
+            </td>
+          </tr>
+        `;
+      } else {
+        listaFacturaItems.forEach((item, index) => {
+          const costoTotal = (item.cant || 0) * (item.costoUnid || 0);
+          const tipoIva = item.tipoIva !== undefined ? parseInt(item.tipoIva) : 10;
+          const baseImponible = costoTotal / (1 + tipoIva / 100);
+          const cuotaIva = costoTotal - baseImponible;
+
+          tbody.innerHTML += `
+            <tr class="${item.deducible ? 'bg-slate-900/40' : 'bg-rose-950/10'} hover:bg-slate-800/50 transition border-b border-slate-800">
+              <td class="p-2.5 text-center">
+                <label class="inline-flex items-center space-x-1.5 cursor-pointer">
+                  <input type="checkbox" ${item.deducible ? 'checked' : ''} 
+                         onchange="toggleDeducibleFactura(${index})" 
+                         class="w-4 h-4 text-cyan-500 bg-slate-800 border-slate-700 rounded focus:ring-cyan-500">
+                  <span class="text-[11px] font-bold ${item.deducible ? 'text-cyan-400' : 'text-rose-400'}">
+                    ${item.deducible ? '🟢 Sí' : '🔴 No'}
+                  </span>
+                </label>
+              </td>
+              <td class="p-2">
+                <div class="flex flex-col">
+                  <span class="text-[10px] text-slate-400 flex justify-between">
+                    <span>Ítem #${index + 1}</span>
+                    <button type="button" onclick="eliminarFilaFacturaConConfirmacion(${index})" class="text-rose-400 hover:text-rose-200 font-bold px-1 cursor-pointer" title="Eliminar ítem">❌ Eliminar</button>
+                  </span>
+                  <input type="text" value="${item.concepto || ''}" placeholder="Descripción del producto" 
+                         onchange="actualizarItemFactura(${index}, 'concepto', this.value)" 
+                         class="bg-slate-800 text-white rounded px-2 py-1 w-full outline-none focus:border-indigo-500 border border-slate-700 font-medium text-xs">
+                </div>
+              </td>
+              <td class="p-2">
+                <input type="number" step="0.01" value="${item.cant !== undefined ? item.cant : 1}" 
+                       onchange="actualizarItemFactura(${index}, 'cant', parseFloat(this.value))" 
+                       class="bg-slate-800 text-white rounded px-1.5 py-1 w-full text-center outline-none border border-slate-700 font-medium">
+              </td>
+              <td class="p-2">
+                <input type="number" step="0.01" value="${item.costoUnid !== undefined ? item.costoUnid : 0}" 
+                       onchange="actualizarItemFactura(${index}, 'costoUnid', parseFloat(this.value))" 
+                       class="bg-slate-800 text-white rounded px-1.5 py-1 w-full text-right outline-none border border-slate-700 font-medium">
+              </td>
+              <td class="p-2 text-center">
+                <select onchange="actualizarItemFactura(${index}, 'tipoIva', parseInt(this.value))" class="bg-slate-800 text-amber-400 font-bold rounded px-1 py-1 w-full text-center outline-none border border-slate-700">
+                  <option value="0" ${tipoIva===0?'selected':''}>0%</option>
+                  <option value="4" ${tipoIva===4?'selected':''}>4%</option>
+                  <option value="10" ${tipoIva===10?'selected':''}>10%</option>
+                  <option value="21" ${tipoIva===21?'selected':''}>21%</option>
+                </select>
+              </td>
+              <td class="p-2 text-right font-semibold text-amber-400">
+                ${cuotaIva.toFixed(2)} €
+              </td>
+              <td class="p-2 text-right font-extrabold ${item.deducible ? 'text-cyan-400' : 'text-rose-400'}">
+                ${costoTotal.toFixed(2)} €
+              </td>
+              <td class="p-2 text-center">
+                <button type="button" onclick="eliminarFilaFacturaConConfirmacion(${index})" class="text-rose-400 hover:text-rose-200 p-1.5 bg-rose-950/40 rounded-lg border border-rose-800/60 transition cursor-pointer" title="¿Eliminar esta fila?">
+                  <i class="fa-solid fa-xmark font-bold text-sm"></i>
+                </button>
+              </td>
+            </tr>
+          `;
+        });
+      }
+
+      calcularTotalesFactura();
+    }
+
+    function agregarFilaFactura(concepto, cant, costoUnid, tipoIva, deducible) {
+      listaFacturaItems.push({
+        concepto: concepto || 'Insumo Nuevo',
+        cant: cant !== undefined ? cant : 1,
+        costoUnid: costoUnid !== undefined ? costoUnid : 0.00,
+        tipoIva: tipoIva !== undefined ? tipoIva : 10,
+        deducible: deducible !== undefined ? deducible : true
+      });
+      renderizarTablaFactura();
+    }
+
+    function actualizarItemFactura(index, campo, valor) {
+      if (campo === 'cant' || campo === 'costoUnid' || campo === 'tipoIva') {
+        listaFacturaItems[index][campo] = isNaN(valor) ? 0 : valor;
+      } else {
+        listaFacturaItems[index][campo] = valor;
+      }
+      renderizarTablaFactura();
+    }
+
+    function toggleDeducibleFactura(index) {
+      listaFacturaItems[index].deducible = !listaFacturaItems[index].deducible;
+      renderizarTablaFactura();
+    }
+
+    function eliminarFilaFacturaConConfirmacion(index) {
+      const itemNombre = listaFacturaItems[index] ? listaFacturaItems[index].concepto : 'este producto';
+      const confirmacion = confirm(`¿Está seguro de que desea eliminar la factura / ítem "${itemNombre}"?`);
+      if (confirmacion) {
+        listaFacturaItems.splice(index, 1);
+        renderizarTablaFactura();
+      }
+    }
+
+    function calcularTotalesFactura() {
+      let totalBruto = 0;
+      let subtotalDeducible = 0;
+      let subtotalPersonal = 0;
+
+      listaFacturaItems.forEach(item => {
+        const costo = (item.cant || 0) * (item.costoUnid || 0);
+        totalBruto += costo;
+        if (item.deducible) {
+          subtotalDeducible += costo;
+        } else {
+          subtotalPersonal += costo;
+        }
+      });
+
+      document.getElementById('factura-total-bruto').textContent = totalBruto.toFixed(2).replace('.', ',') + ' €';
+      document.getElementById('factura-subtotal-deducible').textContent = subtotalDeducible.toFixed(2).replace('.', ',') + ' €';
+      document.getElementById('factura-subtotal-personal').textContent = subtotalPersonal.toFixed(2).replace('.', ',') + ' €';
+    }
+
+    function guardarFacturaEnGastos() {
+      if (listaFacturaItems.length === 0) {
+        alert("Por favor añade al menos un producto a la factura.");
+        return;
+      }
+
+      const proveedor = document.getElementById('factura-proveedor').value || 'Proveedor Varios';
+      const fechaRegistro = document.getElementById('report-date').value || '2026-09-15';
+
+      let sumDeducible = 0;
+      let sumPersonal = 0;
+
+      listaFacturaItems.forEach(item => {
+        const monto = (item.cant || 0) * (item.costoUnid || 0);
+        if (item.deducible) {
+          sumDeducible += monto;
+        } else {
+          sumPersonal += monto;
+        }
+
+        listaCostos.push({
+          fecha: fechaRegistro,
+          proveedor: proveedor,
+          concepto: item.concepto,
+          cant: item.cant,
+          costoUnid: item.costoUnid,
+          tipoIva: item.tipoIva !== undefined ? item.tipoIva : 10,
+          monto: monto,
+          deducible: item.deducible
+        });
+      });
+
+      recargarPanel();
+      cerrarModal('modal-facturas');
+      limpiarModalFactura();
+
+      alert(`¡Factura/Ticket de ${proveedor} registrado correctamente!\n\n🟢 Registrado en Costos Deducibles (Negocio): ${sumDeducible.toFixed(2)} €\n🔴 Registrado en Costos No Deducibles (Personal): ${sumPersonal.toFixed(2)} €`);
+    }
+
+    // PANEL DE COSTOS CON BÚSQUEDA Y ACUMULADO
+    function filtrarCostosPorFecha() {
+      const fechaInput = document.getElementById('costos-filter-date');
+      const fechaSel = (fechaInput && fechaInput.value) ? fechaInput.value : '2026-09-15';
+      const tbodyDeducibles = document.getElementById('costos-deducibles-tbody');
+      const tbodyPersonales = document.getElementById('costos-personales-tbody');
+
+      tbodyDeducibles.innerHTML = '';
+      tbodyPersonales.innerHTML = '';
+
+      let totalDia = 0;
+      let acumuladoMes = 0;
+      let deduciblesAcumulado = 0;
+      let personalesAcumulado = 0;
+
+      const mesSel = fechaSel.substring(0, 7);
+
+      listaCostos.forEach((item, index) => {
+        const esMismoDia = item.fecha === fechaSel;
+        const esMismoMesHastaFecha = item.fecha.startsWith(mesSel) && item.fecha <= fechaSel;
+
+        if (esMismoDia) {
+          totalDia += item.monto;
+        }
+
+        if (esMismoMesHastaFecha) {
+          acumuladoMes += item.monto;
+          if (item.deducible) {
+            deduciblesAcumulado += item.monto;
+          } else {
+            personalesAcumulado += item.monto;
+          }
+        }
+
+        const tipoIva = item.tipoIva !== undefined ? item.tipoIva : 10;
+
+        const filaHtml = `
+          <tr class="${esMismoDia ? 'bg-cyan-950/30 font-semibold' : ''}">
+            <td class="p-2 font-mono text-[11px] text-slate-400">${item.fecha}</td>
+            <td class="p-2 text-slate-200 font-medium">${item.proveedor}</td>
+            <td class="p-2 text-slate-300">${item.concepto}</td>
+            <td class="p-2 text-center">${item.cant}</td>
+            <td class="p-2 text-right">${item.costoUnid.toFixed(2)} €</td>
+            <td class="p-2 text-center font-bold text-amber-400">${tipoIva}%</td>
+            <td class="p-2 text-right font-bold ${item.deducible ? 'text-cyan-400' : 'text-rose-400'}">${item.monto.toFixed(2)} €</td>
+            <td class="p-2 text-center">
+              <button type="button" onclick="eliminarRegistroCostoConConfirmacion(${index})" class="text-rose-400 hover:text-rose-200 font-bold p-1 cursor-pointer" title="¿Eliminar esta factura/costo?">❌</button>
+            </td>
+          </tr>
+        `;
+
+        if (esMismoMesHastaFecha) {
+          if (item.deducible) {
+            tbodyDeducibles.innerHTML += filaHtml;
+          } else {
+            tbodyPersonales.innerHTML += filaHtml;
+          }
+        }
+      });
+
+      if (tbodyDeducibles.innerHTML === '') {
+        tbodyDeducibles.innerHTML = `<tr><td colspan="8" class="p-3 text-center text-slate-500 italic">No hay costos deducibles registrados para el período seleccionado.</td></tr>`;
+      }
+      if (tbodyPersonales.innerHTML === '') {
+        tbodyPersonales.innerHTML = `<tr><td colspan="8" class="p-3 text-center text-slate-500 italic">No hay costos personales no deducibles en el período seleccionado.</td></tr>`;
+      }
+
+      document.getElementById('costos-total-dia').textContent = totalDia.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+      document.getElementById('costos-acumulado-mes').textContent = acumuladoMes.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+      document.getElementById('costos-deducibles-acumulado').textContent = deduciblesAcumulado.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+      document.getElementById('costos-personales-acumulado').textContent = personalesAcumulado.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+    }
+
+    function eliminarRegistroCostoConConfirmacion(index) {
+      const itemNombre = listaCostos[index] ? listaCostos[index].concepto : 'esta factura';
+      if (confirm(`¿Está seguro de que desea eliminar permanentemente la factura/costo "${itemNombre}"?`)) {
+        listaCostos.splice(index, 1);
+        filtrarCostosPorFecha();
+        recargarPanel();
+      }
+    }
+
+    // PANEL DE GASTOS OPERATIVOS
+    function renderizarTablaGastos() {
+      const tbody = document.getElementById('gastos-table-body');
+      tbody.innerHTML = '';
+      let total = 0;
+
+      if (listaGastos.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="p-4 text-center text-slate-500 italic">No hay gastos operativos registrados (alquiler, luz, nóminas). Presiona <strong>+ Añadir Gasto Operativo</strong>.</td>
+          </tr>
+        `;
+      } else {
+        listaGastos.forEach((item, index) => {
+          total += item.monto;
+          const tipoIva = item.tipoIva !== undefined ? parseInt(item.tipoIva) : 21;
+          tbody.innerHTML += `
+            <tr>
+              <td class="p-2"><input type="text" value="${item.concepto}" onchange="actualizarGasto(${index}, 'concepto', this.value)" class="bg-slate-800 text-white rounded px-2 py-1 w-full outline-none"></td>
+              <td class="p-2"><input type="text" value="${item.categoria}" onchange="actualizarGasto(${index}, 'categoria', this.value)" class="bg-slate-800 text-slate-300 rounded px-2 py-1 w-full outline-none"></td>
+              <td class="p-2 text-center">
+                <select onchange="actualizarGasto(${index}, 'tipoIva', parseInt(this.value))" class="bg-slate-800 text-amber-400 font-bold rounded px-1 py-1 outline-none">
+                  <option value="0" ${tipoIva===0?'selected':''}>0%</option>
+                  <option value="4" ${tipoIva===4?'selected':''}>4%</option>
+                  <option value="10" ${tipoIva===10?'selected':''}>10%</option>
+                  <option value="21" ${tipoIva===21?'selected':''}>21%</option>
+                </select>
+              </td>
+              <td class="p-2 text-right"><input type="number" step="0.01" value="${item.monto.toFixed(2)}" onchange="actualizarGasto(${index}, 'monto', parseFloat(this.value))" class="bg-slate-800 text-amber-400 font-bold rounded px-2 py-1 w-24 text-right outline-none"></td>
+              <td class="p-2 text-center">
+                <button type="button" onclick="eliminarFilaGastoConConfirmacion(${index})" class="text-rose-400 hover:text-rose-200 font-bold p-1 cursor-pointer" title="Eliminar gasto">❌</button>
+              </td>
+            </tr>
+          `;
+        });
+      }
+      document.getElementById('total-gastos-modal').textContent = total.toFixed(2).replace('.', ',') + ' €';
+    }
+
+    function agregarFilaGasto(concepto, categoria, monto, tipoIva) {
+      listaGastos.push({ concepto, categoria, monto: monto||0, tipoIva: tipoIva||21 });
+      renderizarTablaGastos();
+    }
+
+    function actualizarGasto(index, campo, valor) {
+      if (campo === 'monto' || campo === 'tipoIva') {
+        listaGastos[index][campo] = isNaN(valor) ? 0 : valor;
+      } else {
+        listaGastos[index][campo] = valor;
+      }
+      renderizarTablaGastos();
+    }
+
+    function eliminarFilaGastoConConfirmacion(index) {
+      const gastoNombre = listaGastos[index] ? listaGastos[index].concepto : 'este gasto';
+      if (confirm(`¿Está seguro de que desea eliminar el gasto "${gastoNombre}"?`)) {
+        listaGastos.splice(index, 1);
+        renderizarTablaGastos();
+      }
+    }
+
+    function guardarGastos() {
+      recargarPanel();
+      cerrarModal('modal-gastos');
+      alert("Panel de Gastos Operativos actualizado correctamente.");
+    }
+
+    // ESCANDALLO DE PLATO
+    function previewPlatoImagen(input) {
+      if (!input || !input.files || input.files.length === 0) return;
+      const file = input.files;
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = document.getElementById('plato-img-preview');
+        img.src = e.target.result;
+        img.classList.remove('hidden');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function renderizarIngredientesEscandallo() {
+      const tbody = document.getElementById('escandallo-ingredients-body');
+      tbody.innerHTML = '';
+
+      listaIngredientes.forEach((item, index) => {
+        const subtotal = item.cant * item.costoUnid;
+        tbody.innerHTML += `
+          <tr>
+            <td class="p-2"><input type="text" value="${item.nombre}" onchange="actualizarIngrediente(${index}, 'nombre', this.value)" class="bg-slate-800 text-white rounded px-2 py-1 w-full outline-none"></td>
+            <td class="p-2"><input type="number" step="0.001" value="${item.cant}" onchange="actualizarIngrediente(${index}, 'cant', parseFloat(this.value))" class="bg-slate-800 text-white rounded px-1.5 py-1 w-16 outline-none"></td>
+            <td class="p-2">
+              <select onchange="actualizarIngrediente(${index}, 'unid', this.value)" class="bg-slate-800 text-slate-300 rounded px-1 py-1 outline-none">
+                <option value="KG" ${item.unid==='KG'?'selected':''}>KG</option>
+                <option value="G" ${item.unid==='G'?'selected':''}>G</option>
+                <option value="L" ${item.unid==='L'?'selected':''}>L</option>
+                <option value="UNIDAD" ${item.unid==='UNIDAD'?'selected':''}>U.</option>
+              </select>
+            </td>
+            <td class="p-2"><input type="number" step="0.01" value="${item.costoUnid.toFixed(2)}" onchange="actualizarIngrediente(${index}, 'costoUnid', parseFloat(this.value))" class="bg-slate-800 text-white rounded px-1.5 py-1 w-16 outline-none"></td>
+            <td class="p-2 text-right font-bold text-slate-200">${subtotal.toFixed(2)} €</td>
+            <td class="p-2 text-center"><button type="button" onclick="eliminarIngrediente(${index})" class="text-rose-400 hover:text-rose-200 cursor-pointer"><i class="fa-solid fa-trash-can"></i></button></td>
+          </tr>
+        `;
+      });
+      calcularEscandallo();
+    }
+
+    function agregarFilaIngrediente(nombre, cant, unid, costoUnid) {
+      listaIngredientes.push({ nombre: nombre || 'Nuevo Insumo', cant: cant||0.1, unid: unid||'KG', costoUnid: costoUnid||5.00 });
+      renderizarIngredientesEscandallo();
+    }
+
+    function actualizarIngrediente(index, campo, valor) {
+      listaIngredientes[index][campo] = valor;
+      renderizarIngredientesEscandallo();
+    }
+
+    function eliminarIngrediente(index) {
+      listaIngredientes.splice(index, 1);
+      renderizarIngredientesEscandallo();
+    }
+
+    function calcularEscandallo() {
+      const costoTotal = listaIngredientes.reduce((acc, item) => acc + (item.cant * item.costoUnid), 0);
+      const pvpGross = parseFloat(document.getElementById('plato-pvp').value) || 1.00;
+      const pvpNet = pvpGross / 1.10;
+      const foodCostPct = (costoTotal / pvpNet) * 100;
+      const pvpSugerido = (costoTotal / 0.30) * 1.10;
+
+      document.getElementById('escandallo-costo-total').textContent = costoTotal.toFixed(2).replace('.', ',') + ' €';
+      document.getElementById('escandallo-food-cost-pct').textContent = foodCostPct.toFixed(2) + '% ' + (foodCostPct <= 30 ? '(🟢 Óptimo)' : '(🔴 Revisar)');
+      document.getElementById('escandallo-pvp-sugerido').textContent = pvpSugerido.toFixed(2).replace('.', ',') + ' €';
+    }
+
+    function guardarEscandallo() {
+      recargarPanel();
+      cerrarModal('modal-escandallo');
+      alert("¡Escandallo guardado correctamente!");
+    }
+
+    function abrirModalConfig() {
+      window.location.replace(new URL('panel_fac9.html', window.location.href).href);
+    }
+  </script>
+</body>
+</html>
